@@ -55,4 +55,7 @@ def run_ingest():
                     ids=ids,
                     metadatas=[page["metadata"]] * len(chunks),
                 )
-if __name__ == "__main__"
+
+
+if __name__ == "__main__":
+    run_ingest()
