@@ -26,3 +26,9 @@ def chunk_text(text, chunk_size, overlap):
 
 def run_ingest():
     client = chromadb.PersistentClient(path=config.VECTOR_DB_PATH)
+
+    emb_fn = embedding_functions.SentenceTransformerEmbeddingFunction(
+        model_name=config.EMBEDDING_MODEL_NAME
+    )
+
+    collection = client.get
