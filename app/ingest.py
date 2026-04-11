@@ -12,7 +12,7 @@ def get_text(path):
         text = page.extract_text()
         if text.strip():
             docs.append({"text:": text})
-        return docs
+    return docs
 
 
 def chunk_text(text, chunk_size, overlap):
