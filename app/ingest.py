@@ -11,7 +11,7 @@ def get_text(path):
     for i, page in enumerate(reader.pages):
         text = page.extract_text()
         if text.strip():
-            docs.append({"text: ", text})
+            docs.append({"text:": text})
         return docs
 
 
