@@ -1,4 +1,5 @@
 import os
+from typing import Any, cast
 
 import chromadb
 import config
@@ -13,7 +14,7 @@ def get_text(path):
     for i, page in enumerate(reader.pages):
         text = page.extract_text()
         if text.strip():
-            docs.append({"text:": text})
+            docs.append({"text": text, "metadata": {"page": i + 1}})
     return docs
 
 
@@ -31,8 +32,26 @@ def run_ingest():
         model_name=config.EMBEDDING_MODEL_NAME
     )
 
-    collection = client.get_or_create_collection(name="devdocs")
+    collection = client.get_or_create_collection(
+        name="devdocs", embedding_function=cast(Any, emb_fn)
+    )
 
     for filename in os.listdir(config.DATA_DIR):
         if filename.endswith(".pdf"):
             file_path = os.path.join(config.DATA_DIR, filename)
+
+            pages = get_text(file_path)
+
+            for page in pages:
+                chunks = chunk_text(
+                    page["text"], config.CHUNK_SIZE, config.CHUNK_OVERLAP
+                )
+                ids = [
+                    f"{filename}_{page['metadata']['page']}_{i}"
+                    for i in range(len(chunks))
+                ]
+                collection.add(
+                    documents=chunks,
+                    ids=ids,
+                    metadatas=[page["metadata"]] * len(chunks),
+                )
