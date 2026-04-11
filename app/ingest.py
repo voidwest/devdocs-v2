@@ -31,4 +31,4 @@ def run_ingest():
         model_name=config.EMBEDDING_MODEL_NAME
     )
 
-    collection = client.get
+    collection = client.get_or_create_collection(name="devdocs")
