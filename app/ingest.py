@@ -1,5 +1,6 @@
 import os
 
+import chromadb
 import config
 import pypdf
 
