@@ -32,3 +32,7 @@ def run_ingest():
     )
 
     collection = client.get_or_create_collection(name="devdocs")
+
+    for filename in os.listdir(config.DATA_DIR):
+        if filename.endswith(".pdf"):
+            file_path = os.path.join(config.DATA_DIR, filename)
