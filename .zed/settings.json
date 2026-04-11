@@ -1,13 +1,11 @@
 {
-  "languages": {
-    "Python": {
-      "language_servers": [
-        // Enable ty, disable basedpyright, and enable all
-        // other registered language servers (ruff, pylsp, pyright).
-        "ty",
-        "!basedpyright",
-        "...",
-      ],
+  "lsp": {
+    "basedpyright": {
+      "settings": {
+        "basedpyright": {
+          "pythonPath": "/usr/bin/python3",
+        },
+      },
     },
   },
 }
