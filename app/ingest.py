@@ -3,6 +3,7 @@ import os
 import chromadb
 import config
 import pypdf
+from chromadb.utils import embedding_functions
 
 
 def get_text(path):
@@ -21,3 +22,7 @@ def chunk_text(text, chunk_size, overlap):
     for i in range(0, len(text), chunk_size - overlap):
         chunks.append(text[i : i + chunk_size])
     return chunks
+
+
+def run_ingest():
+    client = chromadb.PersistentClient(path=config.VECTOR_DB_PATH)
