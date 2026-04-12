@@ -14,3 +14,7 @@ def get_context(query, n_result=3):
     collection = client.get_collection(
         name="devdocs", embedding_function=cast(Any, emb_fn)
     )
+
+    results = collection.query(query_texts=[query], n_results=n_result)
+
+    return "\n---\n".join(results["documents"][0])
