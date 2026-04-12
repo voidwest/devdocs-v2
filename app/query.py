@@ -18,3 +18,19 @@ def get_context(query, n_result=3):
     results = collection.query(query_texts=[query], n_results=n_result)
 
     return "\n---\n".join(results["documents"][0])
+
+
+SYSTEM_PROMPT = """you are a helpful assistant. use the provided context to answer the question.
+If the answer isn't in the context, say you don't know."""
+
+
+def build_prompt(query, context):
+    return f"""<|im_start|>system
+{SYSTEM_PROMPT}<|im_end|>
+<|im_start|>user
+Context:
+{context}
+
+Question: {query}<|im_end|>
+<|im_start|>assistant
+"""
