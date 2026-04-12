@@ -46,3 +46,17 @@ def ask_llm(prompt):
     llm_response = requests.post(f"{config.LLM_BASE_URL}/api/generate", json=llm_info)
 
     return llm_response.json().get("response")
+
+
+def query_docs(user_query: str):
+    context = get_context(user_query)
+    prompt = build_prompt(user_query, context)
+    answer = ask_llm(prompt)
+
+    return answer
+
+
+if __name__ == "__main__":
+    test_query = "what's this doc about?"
+    print(f"User: {test_query}")
+    print(f"AI: {query_docs(test_query)}")
