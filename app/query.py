@@ -34,3 +34,13 @@ Context:
 Question: {query}<|im_end|>
 <|im_start|>assistant
 """
+
+
+def ask_llm(prompt):
+    llm_info = {
+        "model": config.LLM_MODEL,
+        "prompt": prompt,
+        "stream": False,
+        "options": {"temperature": config.TEMPERATURE},
+    }
+    llm_response = requests.post(f"{config.LLM_BASE_URL}/api/generate", json=llm_info)
