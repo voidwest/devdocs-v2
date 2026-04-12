@@ -45,4 +45,4 @@ def ask_llm(prompt):
     }
     llm_response = requests.post(f"{config.LLM_BASE_URL}/api/generate", json=llm_info)
 
-    return llm_response.json().get("llm_response")
+    return llm_response.json().get("response")
