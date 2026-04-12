@@ -1,3 +1,5 @@
+from typing import Any, cast
+
 import chromadb
 import config
 import requests
@@ -9,4 +11,6 @@ def get_context(query, n_result=3):
     emb_fn = embedding_functions.SentenceTransformerEmbeddingFunction(
         model_name=config.EMBEDDING_MODEL_NAME
     )
-    collection = client.get_collection(name="devdocs", embedding_function=emb_fn)
+    collection = client.get_collection(
+        name="devdocs", embedding_function=cast(Any, emb_fn)
+    )
