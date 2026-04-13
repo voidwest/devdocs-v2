@@ -2,9 +2,16 @@ import os
 
 import config
 from fastapi import FastAPI
+from fastapi.routing import asynccontextmanager
 from ingest import run_ingest
 from pydantic import BaseModel
 from query import query_docs
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    print(f"init using {config.LLM_BASE_URL}")
+
 
 app = FastAPI(title="DevDocs V2")
 
