@@ -1,8 +1,8 @@
 import os
+from contextlib import asynccontextmanager
 
 import config
 from fastapi import FastAPI
-from fastapi.routing import asynccontextmanager
 from ingest import run_ingest
 from pydantic import BaseModel
 from query import query_docs
