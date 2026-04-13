@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+chromadb
+pypdf
+sentence-transformers
+requests
+pydantic
