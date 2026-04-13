@@ -6,7 +6,7 @@ from query import query_docs
 
 
 def main():
-    if not os.path.exists():
+    if not os.path.exists(config.VECTOR_DB_PATH):
         run_ingest()
 
     print("test msg")
