@@ -40,3 +40,9 @@ class aiResponse(BaseModel):
 async def ask_rag(request: userRequest):
     result = query_docs(request.prompt)
     return {"answer": result}
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run(app, host="0.0.0.0", port=8000)
