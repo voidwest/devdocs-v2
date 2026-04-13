@@ -15,8 +15,16 @@ async def lifespan(app: FastAPI):
     config.DATA_DIR.mkdir(parents=True, exist_ok=True)
     config.DB_DIR.mkdir(parents=True, exist_ok=True)
 
+    if not (config.DB_DIR.exists() and any(config.DB_DIR.iterdir())):
+        print(f"databse is empty, processing from {config.DATA_DIR}")
+        run_ingest()
+    else:
+        print(f"data exists at {config.VECTOR_DB_PATH}")
 
-app = FastAPI(title="DevDocs V2")
+    yield
+
+
+app = FastAPI(lifespan=lifespan, title="DevDocs V2")
 
 
 class userRequest(BaseModel):
