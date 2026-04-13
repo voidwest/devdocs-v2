@@ -7,3 +7,12 @@ from query import query_docs
 def main():
     if not os.path.exists("./db_storage"):
         run_ingest()
+
+    print("test msg")
+    while True:
+        user_input = input("msg: ")
+        if user_input.lower() in ["exit", "quit"]:
+            break
+
+        response = query_docs(user_input)
+        print(f"\nAI: {response}\n")
