@@ -12,6 +12,9 @@ from query import query_docs
 async def lifespan(app: FastAPI):
     print(f"init using {config.LLM_BASE_URL}")
 
+    config.DATA_DIR.mkdir(parents=True, exist_ok=True)
+    config.DB_DIR.mkdir(parents=True, exist_ok=True)
+
 
 app = FastAPI(title="DevDocs V2")
 
