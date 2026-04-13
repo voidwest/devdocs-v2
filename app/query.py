@@ -20,20 +20,20 @@ def get_context(query, n_result=3):
     return "\n---\n".join(results["documents"][0])
 
 
-SYSTEM_PROMPT = """you are a helpful assistant. use the provided context to answer the question.
-If the answer isn't in the context, say you don't know."""
+SYSTEM_PROMPT = """You are a focused assistant.
+Use ONLY the following context from the book to answer the question. If the answer isn't there, say you don't know."""
 
 
 def build_prompt(query, context):
-    return f"""<|im_start|>system
-{SYSTEM_PROMPT}<|im_end|>
-<|im_start|>user
-Context:
-{context}
+    return f"""<|user|>
+    {SYSTEM_PROMPT}
 
-Question: {query}<|im_end|>
-<|im_start|>assistant
-"""
+    Context:
+    {context}
+
+    Question: {query}<|end|>
+    <|assistant|>
+    """
 
 
 def ask_llm(prompt):
