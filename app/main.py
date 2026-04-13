@@ -1,11 +1,12 @@
 import os
 
+import config
 from ingest import run_ingest
 from query import query_docs
 
 
 def main():
-    if not os.path.exists("./db_storage"):
+    if not os.path.exists():
         run_ingest()
 
     print("test msg")
