@@ -5,17 +5,18 @@ import config
 import requests
 from chromadb.utils import embedding_functions
 
+client = chromadb.PersistentClient(path=config.VECTOR_DB_PATH)
+emb_fn = embedding_functions.SentenceTransformerEmbeddingFunction(
+    model_name=config.EMBEDDING_MODEL_NAME
+)
+collection = client.get_collection(name="devdocs", embedding_function=cast(Any, emb_fn))
+
 
 def get_context(query, n_result=3):
-    client = chromadb.PersistentClient(path=config.VECTOR_DB_PATH)
-    emb_fn = embedding_functions.SentenceTransformerEmbeddingFunction(
-        model_name=config.EMBEDDING_MODEL_NAME
-    )
-    collection = client.get_collection(
-        name="devdocs", embedding_function=cast(Any, emb_fn)
-    )
-
     results = collection.query(query_texts=[query], n_results=n_result)
+
+    if not results["documents"] or not results["documents"][0]:
+        return ""
 
     return "\n---\n".join(results["documents"][0])
 
