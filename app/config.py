@@ -1,7 +1,7 @@
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
-DATA_DIR = BASE_DIR / "data/docs"
+DATA_DIR = BASE_DIR / "app/data/docs"
 DB_DIR = BASE_DIR / "vector_db"
 
 LLM_MODEL = "phi3:mini"
