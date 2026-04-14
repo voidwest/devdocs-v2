@@ -9,10 +9,13 @@ client = chromadb.PersistentClient(path=config.VECTOR_DB_PATH)
 emb_fn = embedding_functions.SentenceTransformerEmbeddingFunction(
     model_name=config.EMBEDDING_MODEL_NAME
 )
-collection = client.get_collection(name="devdocs", embedding_function=cast(Any, emb_fn))
 
 
 def get_context(query, n_result=3):
+    collection = client.get_or_create_collection(
+        name="devdocs", embedding_function=cast(Any, emb_fn)
+    )
+
     results = collection.query(query_texts=[query], n_results=n_result)
 
     if not results["documents"] or not results["documents"][0]:
@@ -27,7 +30,7 @@ Use ONLY the following context from the book to answer the question. If the answ
 
 def build_prompt(query, context):
     return f"""<|system|>
-    You are a research assistant. Use the provided Context to answer the Question.
+    You are a research assistant. Use the provided Context to answer the question.
     Rules:
     1. ONLY use the provided Context.
     2. If the answer is not in the Context, say "I do not have that information."
@@ -55,9 +58,6 @@ def ask_llm(prompt):
 
 def query_docs(user_query: str):
     context = get_context(user_query)
-    print(
-        f"\n--- DEBUG: CONTEXT SENT TO AI ---\n{context}\n----------------------------------\n"
-    )
     prompt = build_prompt(user_query, context)
     answer = ask_llm(prompt)
 

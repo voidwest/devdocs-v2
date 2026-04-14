@@ -15,4 +15,3 @@ DEVICE = "cpu"
 VECTOR_DB_PATH = str(DB_DIR / "chroma_store")
 CHUNK_SIZE = 512
 CHUNK_OVERLAP = 64
-#

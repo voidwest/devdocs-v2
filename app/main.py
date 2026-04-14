@@ -10,16 +10,23 @@ from query import query_docs
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    print(f"init using {config.LLM_BASE_URL}")
+    print("init")
 
-    config.DATA_DIR.mkdir(parents=True, exist_ok=True)
-    config.DB_DIR.mkdir(parents=True, exist_ok=True)
+    import chromadb
 
-    if not (config.DB_DIR.exists() and any(config.DB_DIR.iterdir())):
-        print(f"databse is empty, processing from {config.DATA_DIR}")
+    client = chromadb.PersistentClient(path=config.VECTOR_DB_PATH)
+
+    try:
+        collection = client.get_collection(name="devdocs")
+        count = collection.count()
+    except:
+        count = 0
+
+    if count == 0:
+        print(f"empty or missing collection. ingesting from {config.DATA_DIR}")
         run_ingest()
     else:
-        print(f"data exists at {config.VECTOR_DB_PATH}")
+        print(f"found {count} chunks in 'devdocs' collection.")
 
     yield
 
