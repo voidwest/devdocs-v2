@@ -54,6 +54,9 @@ def ask_llm(prompt):
 
 def query_docs(user_query: str):
     context = get_context(user_query)
+    print(
+        f"\n--- DEBUG: CONTEXT SENT TO AI ---\n{context}\n----------------------------------\n"
+    )
     prompt = build_prompt(user_query, context)
     answer = ask_llm(prompt)
 
