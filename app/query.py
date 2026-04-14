@@ -25,9 +25,13 @@ Use ONLY the following context from the book to answer the question. If the answ
 
 
 def build_prompt(query, context):
-    return f"""<|user|>
-    {SYSTEM_PROMPT}
-
+    return f"""<|system|>
+    You are a research assistant. Use the provided Context to answer the Question.
+    Rules:
+    1. ONLY use the provided Context.
+    2. If the answer is not in the Context, say "I do not have that information."
+    3. Do not use outside knowledge.<|end|>
+    <|user|>
     Context:
     {context}
 
