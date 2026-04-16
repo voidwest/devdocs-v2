@@ -1,8 +1,6 @@
 import os
 from pathlib import Path
 
-from dotenv import dotenv_values, load_dotenv
-
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / "data/docs"
 DB_DIR = BASE_DIR / "vector_db"
