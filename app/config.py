@@ -7,7 +7,7 @@ DATA_DIR = BASE_DIR / "data/docs"
 DB_DIR = BASE_DIR / "vector_db"
 
 LLM_MODEL = "phi3:mini"
-LLM_BASE_URL = "http://localhost:11434"
+LLM_BASE_URL =
 TEMPERATURE = 0.1  #
 
 
