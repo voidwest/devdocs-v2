@@ -1,6 +1,6 @@
 FROM python:3.11-slim
 
-WORKDIR /app/app
+WORKDIR /app
 
 RUN apt-get update && apt-get install -y \
 build-essential \
@@ -10,6 +10,10 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
+
+WORKDIR /app/app
+
+ENV PYTHONPATH=/app/app
 
 RUN mkdir -p data/docs vector_db
 
