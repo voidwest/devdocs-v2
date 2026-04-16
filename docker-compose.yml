@@ -18,7 +18,6 @@ services:
     volumes:
       - ollama_data:/root/.ollama
       - ./pull-model.sh:/pull-model.sh
-    entrypoint: ["/bin/bash", "/pull-model.sh"]
 
 volumes:
   ollama_data:
