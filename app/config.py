@@ -1,5 +1,5 @@
 from pathlib import Path
-
+import os
 from dotenv import dotenv_values, load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -7,8 +7,7 @@ DATA_DIR = BASE_DIR / "data/docs"
 DB_DIR = BASE_DIR / "vector_db"
 
 LLM_MODEL = "phi3:mini"
-LLM_BASE_URL = "http://localhost:11434"
-TEMPERATURE = 0.1  #
+LLM_BASE_URL = os.getenv("LLM_BASE_URL_KEY", "http://localhost:11434")TEMPERATURE = 0.1  #
 
 
 EMBEDDING_MODEL_NAME = "all-MiniLM-L6-v2"
