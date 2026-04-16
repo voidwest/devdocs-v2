@@ -1,0 +1,22 @@
+services:
+  rag-app:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./app/data/docs:/app/app/data/docs
+      - ./app/vector_db/chroma_store:/app/app/vector_db/chroma_store
+    environment:
+      - LLM_BASE_URL_KEY=http://ollama:11434
+    depends_on:
+      - ollama
+
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
+volumes:
+  ollama_data:
