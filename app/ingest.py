@@ -66,8 +66,7 @@ def run_ingest():
                     continue
                 new_docs.append(chunk)
                 new_ids.append(id_)
-                new_meta.append(page["metadata"])
-
+                new_meta.append({"source": filename, "page": page["metadata"]["page"]})
             if new_docs:
                 collection.add(
                     documents=new_docs,
