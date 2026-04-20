@@ -17,7 +17,11 @@ services:
       - "11434:11434"
     volumes:
       - ollama_data:/root/.ollama
-      - ./pull-model.sh:/pull-model.sh
+    command: >
+      sh -c "ollama serve &
+             sleep 5 &&
+             ollama pull phi3:mini &&
+             wait"
 
 volumes:
   ollama_data:
