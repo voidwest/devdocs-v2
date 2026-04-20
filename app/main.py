@@ -40,13 +40,12 @@ class userRequest(BaseModel):
 
 class aiResponse(BaseModel):
     answer: str
-    status: str = "success"
+    sources: list[str]
 
 
 @app.post("/ask", response_model=aiResponse)
 async def ask_rag(request: userRequest):
-    result = query_docs(request.prompt)
-    return {"answer": result}
+    return query_docs(request.prompt)
 
 
 if __name__ == "__main__":
