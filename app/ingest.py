@@ -19,12 +19,17 @@ def get_text(path):
     return docs
 
 
-def chunk_text(text, chunk_size, overlap):
-    words = text.split()
+def chunk_text(text, chunk_size=1200, overlap=200):
     chunks = []
-    for i in range(0, len(words), chunk_size - overlap):
-        chunk = " ".join(words[i : i + chunk_size])
+    start = 0
+    text_len = len(text)
+
+    while start < text_len:
+        end = start + chunk_size
+        chunk = text[start:end]
         chunks.append(chunk)
+        start += chunk_size - overlap
+
     return chunks
 
 
