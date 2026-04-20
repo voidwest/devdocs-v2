@@ -53,16 +53,45 @@ response:
 ```
 
 ## architecture
-PDFs
-→ semantic chunking (character-based sliding window)
-→ embeddings (SentenceTransformer)
-→ ChromaDB
-query:
-→ vector search (top K)
-→ context trimming
-→ prompt construction
-→ LLM (Ollama)
-→ answer + sources
+```text
+        ┌──────────────┐
+        │   PDF Docs   │
+        └──────┬───────┘
+               │
+     ┌─────────▼─────────┐
+     │ Semantic Chunking │
+     └─────────┬─────────┘
+               │
+     ┌─────────▼─────────┐
+     │ Embeddings Model  │
+     └─────────┬─────────┘
+               │
+        ┌──────▼──────┐
+        │  ChromaDB   │
+        └──────┬──────┘
+               │
+        ┌──────▼────────────┐
+        │ Vector Retrieval   │
+        └──────┬────────────┘
+               │
+        ┌──────▼──────┐
+        │  Reranker   │
+        └──────┬──────┘
+               │
+        ┌──────▼──────┐
+        │ Context Trim │
+        └──────┬──────┘
+               │
+        ┌──────▼──────┐
+        │     LLM     │
+        └──────┬──────┘
+               │
+        ┌──────▼──────┐
+        │  Answer +   │
+        │  Sources    │
+        └─────────────┘
+```
+
 
 ## design decisions
 
