@@ -1,5 +1,6 @@
 import time
 from typing import Any, cast
+
 import chromadb
 import config
 import requests
@@ -55,7 +56,7 @@ def build_prompt(query, context):
     """
 
 
-def ask_llm(prompt):
+def ask_llm(prompt, retries=3, backoff=2):
     llm_info = {
         "model": config.LLM_MODEL,
         "prompt": prompt,
@@ -63,19 +64,24 @@ def ask_llm(prompt):
         "options": {"temperature": config.TEMPERATURE},
     }
 
-    try:
-        response = requests.post(
-            f"{config.LLM_BASE_URL}/api/generate",
-            json=llm_info,
-            timeout=config.REQUEST_TIMEOUT,
-        )
-        response.raise_for_status()
+    url = f"{config.LLM_BASE_URL}/api/generate"
 
-        data = response.json()
-        return data.get("response", "")
+    for attempt in range(1, retries + 1):
+        try:
+            response = requests.post(
+                url,
+                json=llm_info,
+                timeout=config.REQUEST_TIMEOUT,
+            )
+            response.raise_for_status()
 
-    except requests.RequestException as e:
-        return f"[LLM request failed] {str(e)}"
+            return response.json().get("response", "")
+
+        except requests.RequestException as e:
+            if attempt == retries:
+                return f"[LLM failed after {retries} retries] {str(e)}"
+
+            time.sleep(backoff**attempt)
 
 
 def query_docs(user_query: str):
