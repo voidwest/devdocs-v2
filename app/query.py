@@ -10,6 +10,19 @@ client = chromadb.PersistentClient(path=config.VECTOR_DB_PATH)
 emb_fn = get_embedding_function()
 
 
+def trim_context(docs, max_chars=12000):
+    trimmed = []
+    total = 0
+
+    for d in docs:
+        if total + len(d) > max_chars:
+            break
+        trimmed.append(d)
+        total += len(d)
+
+    return trimmed
+
+
 def get_context(query, n_result=config.TOP_K):
     collection = client.get_or_create_collection(
         name="devdocs", embedding_function=cast(Any, emb_fn)
@@ -27,6 +40,7 @@ def get_context(query, n_result=config.TOP_K):
         return "", []
 
     docs = docs_batch[0]
+    docs = trim_context(docs)
     metas = metas_batch[0] if metas_batch and metas_batch[0] else []
 
     sources = {f"{m.get('source', 'unknown')}#page={m.get('page', '?')}" for m in metas}
