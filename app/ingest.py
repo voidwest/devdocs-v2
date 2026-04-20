@@ -39,24 +39,40 @@ def run_ingest():
         name="devdocs", embedding_function=cast(Any, emb_fn)
     )
 
+    existing_ids = set(collection.get()["ids"])
+
     for filename in os.listdir(config.DATA_DIR):
-        if filename.endswith(".pdf"):
-            file_path = os.path.join(config.DATA_DIR, filename)
+        if not filename.endswith(".pdf"):
+            continue
 
-            pages = get_text(file_path)
+        file_path = os.path.join(config.DATA_DIR, filename)
+        filehash = file_hash(file_path)
 
-            for page in pages:
-                chunks = chunk_text(
-                    page["text"], config.CHUNK_SIZE, config.CHUNK_OVERLAP
-                )
-                ids = [
-                    f"{filename}_{page['metadata']['page']}_{i}"
-                    for i in range(len(chunks))
-                ]
+        pages = get_text(file_path)
+
+        for page in pages:
+            chunks = chunk_text(page["text"], config.CHUNK_SIZE, config.CHUNK_OVERLAP)
+
+            ids = [
+                f"{filehash}_{page['metadata']['page']}_{i}" for i in range(len(chunks))
+            ]
+
+            new_docs = []
+            new_ids = []
+            new_meta = []
+
+            for chunk, id_ in zip(chunks, ids):
+                if id_ in existing_ids:
+                    continue
+                new_docs.append(chunk)
+                new_ids.append(id_)
+                new_meta.append(page["metadata"])
+
+            if new_docs:
                 collection.add(
-                    documents=chunks,
-                    ids=ids,
-                    metadatas=[page["metadata"]] * len(chunks),
+                    documents=new_docs,
+                    ids=new_ids,
+                    metadatas=new_meta,
                 )
 
 
