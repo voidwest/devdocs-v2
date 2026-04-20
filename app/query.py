@@ -62,17 +62,28 @@ def ask_llm(prompt):
         "stream": False,
         "options": {"temperature": config.TEMPERATURE},
     }
-    llm_response = requests.post(f"{config.LLM_BASE_URL}/api/generate", json=llm_info)
 
-    return llm_response.json().get("response")
+    try:
+        response = requests.post(
+            f"{config.LLM_BASE_URL}/api/generate",
+            json=llm_info,
+            timeout=config.REQUEST_TIMEOUT,
+        )
+        response.raise_for_status()
+
+        data = response.json()
+        return data.get("response", "")
+
+    except requests.RequestException as e:
+        return f"[LLM request failed] {str(e)}"
 
 
 def query_docs(user_query: str):
-    context = get_context(user_query)
+    context, sources = get_context(user_query)
     prompt = build_prompt(user_query, context)
     answer = ask_llm(prompt)
 
-    return answer
+    return {"answer": answer, "sources": sources}
 
 
 if __name__ == "__main__":
