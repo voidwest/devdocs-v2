@@ -1,3 +1,4 @@
+import hashlib
 import os
 from typing import Any, cast
 
@@ -57,6 +58,11 @@ def run_ingest():
                     ids=ids,
                     metadatas=[page["metadata"]] * len(chunks),
                 )
+
+
+def file_hash(path):
+    with open(path, "rb") as f:
+        return hashlib.md5(f.read()).hexdigest()
 
 
 if __name__ == "__main__":

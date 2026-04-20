@@ -13,7 +13,7 @@ LLM_MODEL = "phi3:mini"
 LLM_BASE_URL = os.getenv("LLM_BASE_URL_KEY", "http://localhost:11434")
 print(f"value is {LLM_BASE_URL}")
 TEMPERATURE = 0.1  #
-
+REQUEST_TIMEOUT = 30
 
 EMBEDDING_MODEL_NAME = "all-MiniLM-L6-v2"
 DEVICE = "cpu"
