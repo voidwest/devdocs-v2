@@ -39,7 +39,7 @@ def run_ingest():
         name="devdocs", embedding_function=cast(Any, emb_fn)
     )
 
-    existing_ids = set(collection.get()["ids"])
+    existing_ids = set(collection.get().get("ids", []))
 
     for filename in os.listdir(config.DATA_DIR):
         if not filename.endswith(".pdf"):
