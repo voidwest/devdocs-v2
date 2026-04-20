@@ -5,7 +5,7 @@ from typing import Any, cast
 import chromadb
 import config
 import pypdf
-from chromadb.utils import embedding_functions
+from embedding import get_embedding_function
 
 
 def get_text(path):
@@ -36,10 +36,8 @@ def chunk_text(text, chunk_size=1200, overlap=200):
 def run_ingest():
     client = chromadb.PersistentClient(path=config.VECTOR_DB_PATH)
 
-    emb_fn = embedding_functions.SentenceTransformerEmbeddingFunction(
-        model_name=config.EMBEDDING_MODEL_NAME
-    )
-
+    emb_fn = get_embedding_function()
+    
     collection = client.get_or_create_collection(
         name="devdocs", embedding_function=cast(Any, emb_fn)
     )
