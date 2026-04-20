@@ -11,17 +11,28 @@ emb_fn = embedding_functions.SentenceTransformerEmbeddingFunction(
 )
 
 
-def get_context(query, n_result=3):
+def get_context(query, n_result=config.TOP_K):
     collection = client.get_or_create_collection(
         name="devdocs", embedding_function=cast(Any, emb_fn)
     )
 
     results = collection.query(query_texts=[query], n_results=n_result)
 
-    if not results["documents"] or not results["documents"][0]:
-        return ""
+    if not results:
+        return "", []
 
-    return "\n---\n".join(results["documents"][0])
+    docs_batch = results.get("documents") or []
+    metas_batch = results.get("metadatas") or []
+
+    if not docs_batch or not docs_batch[0]:
+        return "", []
+
+    docs = docs_batch[0]
+    metas = metas_batch[0] if metas_batch and metas_batch[0] else []
+
+    sources = {f"{m.get('source', 'unknown')}#page={m.get('page', '?')}" for m in metas}
+
+    return "\n---\n".join(docs), list(sources)
 
 
 SYSTEM_PROMPT = """You are a focused assistant.
