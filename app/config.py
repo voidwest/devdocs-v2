@@ -1,24 +1,32 @@
-import os
+from functools import lru_cache
 from pathlib import Path
 
-from dotenv import dotenv_values, load_dotenv
+from pydantic_settings import BaseSettings
 
-load_dotenv()
 
-BASE_DIR = Path(__file__).resolve().parent
-DATA_DIR = BASE_DIR / "data/docs"
-DB_DIR = BASE_DIR / "vector_db"
+class Settings(BaseSettings):
+    base_dir: Path = Path(__file__).resolve().parent
+    data_dir: Path = base_dir / "data/docs"
+    db_dir: Path = base_dir / "vector_db"
+    llm_model: str = "phi3:mini"
+    llm_base_url: str = "http://localhost:11434"
+    temperature: float = 0.1
+    top_k: int = 5
+    request_timeout: int = 30
 
-LLM_MODEL = "phi3:mini"
-LLM_BASE_URL = os.getenv("LLM_BASE_URL_KEY", "http://localhost:11434")
-print(f"value is {LLM_BASE_URL}")
-TEMPERATURE = 0.1
-TOP_K = 5
-REQUEST_TIMEOUT = 30
+    embedding_model_name: str = "all-MiniLM-L6-v2"
+    device: str = "cpu"
 
-EMBEDDING_MODEL_NAME = "all-MiniLM-L6-v2"
-DEVICE = "cpu"
+    vector_db_path: str = str(db_dir / "chroma_store")
+    chunk_size: int = 512
+    chunk_overlap: int = 64
+    max_prompt_chars: int = 12000
 
-VECTOR_DB_PATH = str(DB_DIR / "chroma_store")
-CHUNK_SIZE = 512
-CHUNK_OVERLAP = 64
+    class Config:
+        env_prefix = ""
+        case_sensitive = False
+
+
+@lru_cache
+def get_settings() -> Settings:
+    return Settings()
