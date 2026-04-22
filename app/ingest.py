@@ -1,10 +1,11 @@
 import hashlib
 import os
-from typing import Any, cast
+from typing import Iterable
 
 import chromadb
 import config
 import pypdf
+from chromadb.api.models.Collection import Collection
 from embedding import get_embedding_function
 
 
@@ -37,7 +38,7 @@ def run_ingest():
     client = chromadb.PersistentClient(path=config.VECTOR_DB_PATH)
 
     emb_fn = get_embedding_function()
-    
+
     collection = client.get_or_create_collection(
         name="devdocs", embedding_function=cast(Any, emb_fn)
     )
