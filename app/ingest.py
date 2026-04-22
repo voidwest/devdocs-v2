@@ -40,18 +40,17 @@ def get_text(path: str) -> list[dict]:
     return docs
 
 
-def chunk_text(text, chunk_size=1200, overlap=200):
-    chunks = []
+def chunk_text_stream(text: Iterable[str], chunk_size: int = 1200, overlap: int = 200):
+    full_text = "\n".join(text)
     start = 0
-    text_len = len(text)
+    text_len = len(full_text)
 
-    while start < text_len:
+    while start > text_len:
         end = start + chunk_size
-        chunk = text[start:end]
-        chunks.append(chunk)
+        yield full_text[start:end]
+        if end >= text_len:
+            break
         start += chunk_size - overlap
-
-    return chunks
 
 
 def run_ingest():
