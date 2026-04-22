@@ -53,6 +53,21 @@ def chunk_text_stream(text: Iterable[str], chunk_size: int = 1200, overlap: int 
         start += chunk_size - overlap
 
 
+def get_existing_doc_hashes(collection: Collection) -> set[str]:
+    result = collection.get(where={"dochash": {"$ne": ""}}, include=["metadatas"])
+
+    metadatas = result.get("metadatas") if result else None
+    if not metadatas:
+        return set()
+
+    hashes: set[str] = set()
+    for m in metadatas:
+        val = m.get("dochash")
+        if isinstance(val, str):
+            hashes.add(val)
+    return hashes
+
+
 def run_ingest():
     client = chromadb.PersistentClient(path=config.VECTOR_DB_PATH)
 
