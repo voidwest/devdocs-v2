@@ -1,4 +1,5 @@
 import hashlib
+import logging
 import os
 from typing import Iterable
 
@@ -8,14 +9,33 @@ import pypdf
 from chromadb.api.models.Collection import Collection
 from embedding import get_embedding_function
 
+logger = logging.getLogger(__name__)
 
-def get_text(path):
+
+def file_hash(path: str) -> str:
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        while chunk := f.read(8192):
+            h.update(chunk)
+        return h.hexdigest()[:16]
+
+
+def get_text(path: str) -> list[dict]:
+    try:
+        reader = pypdf.PdfReader(path)
+    except Exception as e:
+        logger.error("failed to read pdf %s: %s", path, e)
+        return []
+
     docs = []
-    reader = pypdf.PdfReader(path)
-
     for i, page in enumerate(reader.pages):
-        text = page.extract_text()
-        if text.strip():
+        try:
+            text = page.extract_text()
+        except Exception as e:
+            logger.warning("failed to extract page %d from %s: %s", i, path, e)
+
+            continue
+        if text and text.strip():
             docs.append({"text": text, "metadata": {"page": i + 1}})
     return docs
 
@@ -77,11 +97,6 @@ def run_ingest():
                     ids=new_ids,
                     metadatas=new_meta,
                 )
-
-
-def file_hash(path):
-    with open(path, "rb") as f:
-        return hashlib.md5(f.read()).hexdigest()
 
 
 if __name__ == "__main__":
