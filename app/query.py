@@ -1,9 +1,9 @@
-import time
-from typing import Any, cast
+import logging
+from typing import Any
 
 import chromadb
-import config
-import requests
+import httpx
+from config import get_settings
 from embedding import get_embedding_function
 
 client = chromadb.PersistentClient(path=config.VECTOR_DB_PATH)
