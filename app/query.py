@@ -24,17 +24,18 @@ async def close_httpx_client():
         _httpx_client = None
 
 
-client = chromadb.PersistentClient(path=config.VECTOR_DB_PATH)
-emb_fn = get_embedding_function()
-
-
-def trim_context(docs, max_chars=12000):
+def trim_context(docs: list[str], max_chars: int) -> list[str]:
     trimmed = []
     total = 0
 
     for d in docs:
         if total + len(d) > max_chars:
-            break
+            remaining = max_chars - total
+            if remaining > 100:
+                trimmed.append(d[:remaining])
+                total += remaining
+                logger.info("context trimmed at %d chars (limit %d)", total, max_chars)
+                break
         trimmed.append(d)
         total += len(d)
 
