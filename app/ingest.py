@@ -40,7 +40,7 @@ def get_text(path: str) -> list[dict]:
     return docs
 
 
-def chunk_text_stream(text: Iterable[str], chunk_size: int = 1200, overlap: int = 200):
+def chunk_text_stream(text: Iterable[str], chunk_size: int, overlap: int):
     full_text = "\n".join(text)
     start = 0
     text_len = len(full_text)
@@ -69,48 +69,68 @@ def get_existing_doc_hashes(collection: Collection) -> set[str]:
 
 
 def run_ingest():
-    client = chromadb.PersistentClient(path=config.VECTOR_DB_PATH)
 
+    settings = config.get_settings()
+    os.makedirs(settings.data_dir, exist_ok=True)
+
+    client = chromadb.PersistentClient(path=settings.vector_db_path)
     emb_fn = get_embedding_function()
 
     collection = client.get_or_create_collection(
-        name="devdocs", embedding_function=cast(Any, emb_fn)
+        name="devdocs",
+        embedding_function=emb_fn,
     )
 
-    existing_ids = set(collection.get().get("ids", []))
+    pdf_files = {
+        f: os.path.join(settings.data_dir, f)
+        for f in os.listdir(settings.data_dir)
+        if f.endswith(".pdf")
+    }
 
-    for filename in os.listdir(config.DATA_DIR):
-        if not filename.endswith(".pdf"):
-            continue
+    if not pdf_files:
+        logger.warning("no pdfs found in the data directory %s", settings.data_dir)
 
-        file_path = os.path.join(config.DATA_DIR, filename)
-        filehash = file_hash(file_path)
+        current_hashes = {file_hash(p) for p in pdf_files.values()}
+        existing_hashes = get_existing_doc_hashes(collection)
 
-        pages = get_text(file_path)
+        stale_hashes = existing_hashes - current_hashes
+        for s in stale_hashes:
+            logger.info("removing stale docs for hash %s", s)
+            collection.delete(where={"dochash": s})
 
-        for page in pages:
-            chunks = chunk_text(page["text"], config.CHUNK_SIZE, config.CHUNK_OVERLAP)
+        for filename, filepath in pdf_files.items():
+            doc_hash = file_hash(filepath)
+            if doc_hash in existing_hashes:
+                logger.info("skipping %s (already in database)", filename)
+                continue
 
-            ids = [
-                f"{filehash}_{page['metadata']['page']}_{i}" for i in range(len(chunks))
-            ]
+            pages = get_text(filepath)
+            if not pages:
+                continue
 
-            new_docs = []
-            new_ids = []
-            new_meta = []
-
-            for chunk, id_ in zip(chunks, ids):
-                if id_ in existing_ids:
-                    continue
-                new_docs.append(chunk)
-                new_ids.append(id_)
-                new_meta.append({"source": filename, "page": page["metadata"]["page"]})
-            if new_docs:
-                collection.add(
-                    documents=new_docs,
-                    ids=new_ids,
-                    metadatas=new_meta,
+            page_texts = [p["text"] for p in pages]
+            chunks = list(
+                chunk_text_stream(
+                    page_texts, settings.chunk_size, settings.chunk_overlap
                 )
+            )
+
+            ids = [f"{doc_hash}_{i}" for i in range(len(chunks))]
+
+            metadatas = [
+                {
+                    "source": filename,
+                    "page": "multi",
+                    "dochash": doc_hash,
+                }
+                for _ in chunks
+            ]
+            logger.info("adding %d chunks for %s", len(chunks), filename)
+            collection.add(
+                documents=chunks,
+                ids=ids,
+                metadatas=metadatas,  # type: ignore[arg-type]
+            )
 
 
 if __name__ == "__main__":
