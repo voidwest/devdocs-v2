@@ -42,7 +42,7 @@ def trim_context(docs: list[str], max_chars: int) -> list[str]:
     return trimmed
 
 
-def get_context(query, n_result=config.TOP_K):
+async def get_context(query: str, n_result: int) -> tuple[str, list[str]]:
     collection = client.get_or_create_collection(
         name="devdocs", embedding_function=cast(Any, emb_fn)
     )
@@ -87,7 +87,7 @@ def build_prompt(query, context):
     """
 
 
-def ask_llm(prompt, retries=3, backoff=2):
+async def ask_llm(prompt, retries=3, backoff=2):
     llm_info = {
         "model": config.LLM_MODEL,
         "prompt": prompt,
@@ -115,7 +115,7 @@ def ask_llm(prompt, retries=3, backoff=2):
             time.sleep(backoff**attempt)
 
 
-def query_docs(user_query: str):
+async def query_docs(user_query: str):
     context, sources = get_context(user_query)
     prompt = build_prompt(user_query, context)
     answer = ask_llm(prompt)
