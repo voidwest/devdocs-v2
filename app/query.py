@@ -6,6 +6,24 @@ import httpx
 from config import get_settings
 from embedding import get_embedding_function
 
+logger = logging.getLogger(__name__)
+_httpx_client: httpx.AsyncClient | None = None
+
+
+def get_httpx_client() -> httpx.AsyncClient:
+    global _httpx_client
+    if _httpx_client is None:
+        _httpx_client = httpx.AsyncClient(timeout=None)
+    return _httpx_client
+
+
+async def close_httpx_client():
+    global _httpx_client
+    if _httpx_client is not None:
+        await _httpx_client.aclose()
+        _httpx_client = None
+
+
 client = chromadb.PersistentClient(path=config.VECTOR_DB_PATH)
 emb_fn = get_embedding_function()
 
