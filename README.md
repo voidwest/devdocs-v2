@@ -4,7 +4,7 @@ local RAG pipeline for querying PDF documents. drop in a PDF, ask questions, get
 
 ## features
 
-- PDF ingestion with semantic chunking
+- PDF ingestion with overlapping character-based chunking
 - embedding-based vector retrieval (ChromaDB)
 - context trimming to prevent LLM overflow
 - source tracking per answer
@@ -59,7 +59,7 @@ response:
 └──────┬───────┘
        │
 ┌──────▼──────────────┐
-│  Semantic Chunking  │
+│     Chunking        │
 └──────┬──────────────┘
        │
 ┌──────▼──────────────┐
