@@ -1,3 +1,5 @@
+import threading
+
 import config
 from chromadb.utils import embedding_functions
 
