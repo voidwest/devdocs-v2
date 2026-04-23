@@ -26,16 +26,33 @@ local RAG pipeline for querying PDF documents. drop in a PDF, ask questions, get
 - docker + docker compose
 - 8GB RAM minimum
 
-### setup
+setup
 
-drop your PDFs into `app/data/docs/`, then:
+drop your PDFs into app/data/docs/, then:
 
 ```bash
+# use sudo if needed
 docker compose up --build
 ```
+the app indexes your docs automatically on first boot. watch the logs for adding chunks to know it's working.
+usage
 
-the app indexes your docs automatically on first boot.
+once you see Application startup complete, hit the endpoint:
 
+```bash
+
+curl -X POST http://localhost:8000/ask \
+     -H "Content-Type: application/json" \
+     -d '{"prompt": "what is this doc about?"}'
+```
+
+troubleshoot
+
+    no pdfs found: check your volume paths in docker-compose.yml.
+
+    timeout / 500 error: if you're on a slow CPU, increase timeout in query.py to 300.
+
+    permissions: if the container can't read your files, run chmod -R 755 app/data/docs.
 ### query
 
 ```bash
