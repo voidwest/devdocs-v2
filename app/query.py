@@ -42,7 +42,7 @@ def trim_context(docs: list[str], max_chars: int) -> list[str]:
     return trimmed
 
 
-async def get_context(query: str, n_result: int) -> tuple[str, list[str]]:
+async def get_context(query: str, n_result: int | None = None) -> tuple[str, list[str]]:
 
     settings = get_settings()
     client = chromadb.PersistentClient(path=settings.vector_db_path)
@@ -51,7 +51,9 @@ async def get_context(query: str, n_result: int) -> tuple[str, list[str]]:
         name="devdocs", embedding_function=emb_fn
     )
 
-    results = collection.query(query_texts=[query], n_results=n_result)
+    results = collection.query(
+        query_texts=[query], n_results=n_result or settings.top_k
+    )
 
     docs_batch = results.get("documents") or []
     metas_batch = results.get("metadatas") or []
@@ -68,7 +70,7 @@ async def get_context(query: str, n_result: int) -> tuple[str, list[str]]:
         key = f"{m.get('source', 'unknown')}#pages={m.get('page', '?')}"
         sources[key] = None
 
-    return "\n---\n".join(docs), list(sources)
+    return "\n---\n".join(docs), list(sources.keys())
 
 
 SYSTEM_PROMPT = (
@@ -80,54 +82,53 @@ SYSTEM_PROMPT = (
 )
 
 
-def build_prompt(query, context):
-    return f"""<|system|>
-    You are a research assistant. Use the provided Context to answer the question.
-    Rules:
-    1. ONLY use the provided Context.
-    2. If the answer is not in the Context, say "I do not have that information."
-    3. Do not use outside knowledge.<|end|>
-    <|user|>
-    Context:
-    {context}
-
-    Question: {query}<|end|>
-    <|assistant|>
-    """
+def build_prompt(query: str, context: str) -> str:
+    return (
+        f"<|system|>\n{SYSTEM_PROMPT}<|end|>\n"
+        f"<|user|>\ncontext:\n{context}\n\n"
+        f"question: {query}<|end|>\n"
+        f"<|assistant|>\n"
+    )
 
 
-async def ask_llm(prompt, retries=3, backoff=2):
+async def ask_llm(prompt: str, retries: int = 3, backoff: float = 2.0) -> str:
+    settings = get_settings()
     llm_info = {
-        "model": config.LLM_MODEL,
+        "model": settings.llm_model,
         "prompt": prompt,
         "stream": False,
-        "options": {"temperature": config.TEMPERATURE},
+        "options": {"temperature": settings.temperature},
     }
 
-    url = f"{config.LLM_BASE_URL}/api/generate"
+    url = f"{settings.llm_base_url}/api/generate"
+    client = get_httpx_client()
+
+    last_error: Exception | None = None
 
     for attempt in range(1, retries + 1):
         try:
-            response = requests.post(
-                url,
-                json=llm_info,
-                timeout=config.REQUEST_TIMEOUT,
+            response = await client.post(
+                url, json=llm_info, timeout=settings.request_timeout
             )
             response.raise_for_status()
+            data = response.json()
+            return data.get("response", "")
+        except (httpx.HTTPStatusError, httpx.RequestError) as e:
+            last_error = e
+            logger.warning("llm request %d/%d failed: %s", attempt, retries, e)
+            if attempt < retries:
+                import asyncio
 
-            return response.json().get("response", "")
+                await asyncio.sleep(backoff**attempt)
 
-        except requests.RequestException as e:
-            if attempt == retries:
-                return f"[LLM failed after {retries} retries] {str(e)}"
-
-            time.sleep(backoff**attempt)
+    logger.error("llm failed after %d retries %s", retries, last_error)
+    return f"[llm failed after {retries} retries] {last_error}"
 
 
-async def query_docs(user_query: str):
-    context, sources = get_context(user_query)
+async def query_docs(user_query: str) -> dict[str, Any]:
+    context, sources = await get_context(user_query)
     prompt = build_prompt(user_query, context)
-    answer = ask_llm(prompt)
+    answer = await ask_llm(prompt)
 
     return {"answer": answer, "sources": sources}
 
