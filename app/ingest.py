@@ -45,7 +45,7 @@ def chunk_text_stream(text: Iterable[str], chunk_size: int, overlap: int):
     start = 0
     text_len = len(full_text)
 
-    while start > text_len:
+    while start < text_len:
         end = start + chunk_size
         yield full_text[start:end]
         if end >= text_len:
@@ -88,15 +88,17 @@ def run_ingest():
     }
 
     if not pdf_files:
-        logger.warning("no pdfs found in the data directory %s", settings.data_dir)
+        logger.warning("No PDFs found in %s", settings.data_dir)
+        return
 
-        current_hashes = {file_hash(p) for p in pdf_files.values()}
-        existing_hashes = get_existing_doc_hashes(collection)
+    current_hashes = {file_hash(p) for p in pdf_files.values()}
+    existing_hashes = get_existing_doc_hashes(collection)
 
-        stale_hashes = existing_hashes - current_hashes
-        for s in stale_hashes:
-            logger.info("removing stale docs for hash %s", s)
-            collection.delete(where={"dochash": s})
+    stale_hashes = existing_hashes - current_hashes
+    if stale_hashes:
+        for stale in stale_hashes:
+            logger.info("Removing stale documents for hash %s", stale)
+            collection.delete(where={"dochash": stale})
 
         for filename, filepath in pdf_files.items():
             doc_hash = file_hash(filepath)
