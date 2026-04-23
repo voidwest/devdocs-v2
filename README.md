@@ -48,11 +48,9 @@ curl -X POST http://localhost:8000/ask \
 
 troubleshoot
 
- no pdfs found: check your volume paths in docker-compose.yml.
-
-timeout / 500 error: if you're on a slow CPU, increase timeout in query.py to 300.
-
-permissions: if the container can't read your files, run chmod -R 755 app/data/docs.
+- no pdfs found: check your volume paths in docker-compose.yml.
+- timeout / 500 error: if you're on a slow CPU, increase timeout in query.py
+- permissions: if the container can't read your files, run chmod -R 755 app/data/docs.
     
 ### query
 
