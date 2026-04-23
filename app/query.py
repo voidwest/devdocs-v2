@@ -43,14 +43,15 @@ def trim_context(docs: list[str], max_chars: int) -> list[str]:
 
 
 async def get_context(query: str, n_result: int) -> tuple[str, list[str]]:
+
+    settings = get_settings()
+    client = chromadb.PersistentClient(path=settings.vector_db_path)
+    emb_fn = get_embedding_function()
     collection = client.get_or_create_collection(
-        name="devdocs", embedding_function=cast(Any, emb_fn)
+        name="devdocs", embedding_function=emb_fn
     )
 
     results = collection.query(query_texts=[query], n_results=n_result)
-
-    if not results:
-        return "", []
 
     docs_batch = results.get("documents") or []
     metas_batch = results.get("metadatas") or []
@@ -59,16 +60,24 @@ async def get_context(query: str, n_result: int) -> tuple[str, list[str]]:
         return "", []
 
     docs = docs_batch[0]
-    docs = trim_context(docs)
     metas = metas_batch[0] if metas_batch and metas_batch[0] else []
+    docs = trim_context(docs, settings.max_prompt_chars)
 
-    sources = {f"{m.get('source', 'unknown')}#page={m.get('page', '?')}" for m in metas}
+    sources: dict[str, None] = {}
+    for m in metas:
+        key = f"{m.get('source', 'unknown')}#pages={m.get('page', '?')}"
+        sources[key] = None
 
     return "\n---\n".join(docs), list(sources)
 
 
-SYSTEM_PROMPT = """You are a focused assistant.
-Use ONLY the following context from the book to answer the question. If the answer isn't there, say you don't know."""
+SYSTEM_PROMPT = (
+    "You are a research assistant. Use the provided Context to answer the question.\n"
+    "Rules:\n"
+    "1. ONLY use the provided Context.\n"
+    "2. If the answer is not in the Context, say 'I do not have that information.'\n"
+    "3. Do not use outside knowledge."
+)
 
 
 def build_prompt(query, context):
