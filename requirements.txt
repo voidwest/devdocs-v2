@@ -1,9 +1,9 @@
 fastapi
-uvicorn
+uvicorn[standard]
 chromadb
 pypdf
 sentence-transformers
-requests
+httpx
 pydantic
 pydantic-settings
-streamlit
+python-dotenv
