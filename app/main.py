@@ -22,16 +22,13 @@ async def lifespan(app: FastAPI):
 
     try:
         client = await get_chroma_client()
-        existing = await asyncio.to_thread(
-            lambda: {c.name for c in client.list_collections()}
-        )
+        collection = await asyncio.to_thread(client.get_or_create_collection, "devdocs")
+        count = await asyncio.to_thread(collection.count)
 
-        if "devdocs" not in existing:
-            logger.info("collection missing, running ingestion")
+        if count == 0:
+            logger.info("collection empty, running ingestion")
             await asyncio.to_thread(run_ingest)
         else:
-            collection = await asyncio.to_thread(client.get_collection, "devdocs")
-            count = await asyncio.to_thread(collection.count)
             logger.info("found collection with %d chunks", count)
 
     except asyncio.CancelledError:

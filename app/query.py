@@ -63,9 +63,13 @@ async def get_context(query: str, n_result: int | None = None) -> tuple[str, lis
     settings = get_settings()
     client = await get_chroma_client()
     emb_fn = get_embedding_function()
-    collection = client.get_or_create_collection(
-        name="devdocs", embedding_function=emb_fn
-    )
+    try:
+        collection = client.get_collection(name="devdocs")
+    except:
+        collection = client.get_or_create_collection(
+            name="devdocs",
+            embedding_function=emb_fn,  # type: ignore
+        )
 
     results = collection.query(
         query_texts=[query], n_results=n_result or settings.top_k

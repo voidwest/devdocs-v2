@@ -2,11 +2,11 @@ services:
   rag-app:
     user: "${UID}:${GID}"
     build: .
-    network_mode: host # Add this
-    # ports:            # You can comment this out; host mode ignores it
+    network_mode: host
+    # ports:
     #   - "8000:8000"
     volumes:
-      - ./app/data/docs:/app/app/data/docs
+      - ./app/data/docs:/app/data/docs
       - ./app/vector_db/chroma_store:/app/app/vector_db/chroma_store
     environment:
       - LLM_BASE_URL_KEY=http://localhost:11434

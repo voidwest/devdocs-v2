@@ -76,10 +76,14 @@ def run_ingest():
     client = chromadb.PersistentClient(path=settings.vector_db_path)
     emb_fn = get_embedding_function()
 
-    collection = client.get_or_create_collection(
-        name="devdocs",
-        embedding_function=emb_fn,
-    )
+    try:
+        # First, try to just get the collection without specifying the function
+        collection = client.get_collection(name="devdocs")
+        print("Found existing collection, using persisted embedding function.")
+    except:
+        # If it doesn't exist, create it with your preferred function
+        collection = client.create_collection(name="devdocs", embedding_function=emb_fn)  # type: ignore
+        print("Created new collection with sentence_transformer.")
 
     pdf_files = {
         f: os.path.join(settings.data_dir, f)
@@ -100,39 +104,37 @@ def run_ingest():
             logger.info("Removing stale documents for hash %s", stale)
             collection.delete(where={"dochash": stale})
 
-        for filename, filepath in pdf_files.items():
-            doc_hash = file_hash(filepath)
-            if doc_hash in existing_hashes:
-                logger.info("skipping %s (already in database)", filename)
-                continue
+    for filename, filepath in pdf_files.items():
+        doc_hash = file_hash(filepath)
+        if doc_hash in existing_hashes:
+            logger.info("skipping %s (already in database)", filename)
+            continue
 
-            pages = get_text(filepath)
-            if not pages:
-                continue
+        pages = get_text(filepath)
+        if not pages:
+            continue
 
-            page_texts = [p["text"] for p in pages]
-            chunks = list(
-                chunk_text_stream(
-                    page_texts, settings.chunk_size, settings.chunk_overlap
-                )
-            )
+        page_texts = [p["text"] for p in pages]
+        chunks = list(
+            chunk_text_stream(page_texts, settings.chunk_size, settings.chunk_overlap)
+        )
 
-            ids = [f"{doc_hash}_{i}" for i in range(len(chunks))]
+        ids = [f"{doc_hash}_{i}" for i in range(len(chunks))]
 
-            metadatas = [
-                {
-                    "source": filename,
-                    "page": "multi",
-                    "dochash": doc_hash,
-                }
-                for _ in chunks
-            ]
-            logger.info("adding %d chunks for %s", len(chunks), filename)
-            collection.add(
-                documents=chunks,
-                ids=ids,
-                metadatas=metadatas,  # type: ignore[arg-type]
-            )
+        metadatas = [
+            {
+                "source": filename,
+                "page": "multi",
+                "dochash": doc_hash,
+            }
+            for _ in chunks
+        ]
+        logger.info("adding %d chunks for %s", len(chunks), filename)
+        collection.add(
+            documents=chunks,
+            ids=ids,
+            metadatas=metadatas,  # type: ignore[arg-type]
+        )
 
 
 if __name__ == "__main__":

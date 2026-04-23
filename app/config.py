@@ -6,13 +6,13 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     base_dir: Path = Path(__file__).resolve().parent
-    data_dir: Path = base_dir / "data/docs"
+    data_dir: Path = base_dir / "/app/data/docs"
     db_dir: Path = base_dir / "vector_db"
     llm_model: str = "phi3:mini"
     llm_base_url: str = "http://localhost:11434"
     temperature: float = 0.1
     top_k: int = 5
-    request_timeout: int = 30
+    request_timeout: int = 300
 
     embedding_model_name: str = "all-MiniLM-L6-v2"
     device: str = "cpu"
