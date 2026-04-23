@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 
@@ -7,48 +8,54 @@ from ingest import run_ingest
 from pydantic import BaseModel, Field
 from query import close_httpx_client, query_docs
 
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s"
+)
+logger = logging.getLogger(__name__)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    print("init")
+    settings = get_settings()
+    logger.info("starting service, vector db path is at %s", settings.vector_db_path)
 
     import chromadb
 
-    client = chromadb.PersistentClient(path=config.VECTOR_DB_PATH)
+    client = chromadb.PersistentClient(path=settings.vector_db_path)
 
-    try:
-        collection = client.get_collection(name="devdocs")
-        count = collection.count()
-    except:
-        count = 0
+    existing = {c.name for c in client.list_collections()}
 
-    if count == 0:
-        print(f"empty or missing collection. ingesting from {config.DATA_DIR}")
-        run_ingest()
+    if "devdocs" not in existing:
+        logger.info("collection missing, running ingestion")
+        await asyncio.to_thread(run_ingest)
     else:
-        print(f"found {count} chunks in 'devdocs' collection.")
-
+        collection = client.get_collection("devdocs")
+        count = collection.count()
+        logger.info("found collection with %d chunks", count)
     yield
+
+    logger.info("shutting down")
+    await close_httpx_client()
 
 
 app = FastAPI(lifespan=lifespan, title="DevDocs V2")
 
 
-class userRequest(BaseModel):
-    prompt: str
+class UserRequest(BaseModel):
+    prompt: str = Field(
+        ..., min_length=1, max_length=4000, description="user query for the llm"
+    )
 
 
-class aiResponse(BaseModel):
+class AIResponse(BaseModel):
     answer: str
     sources: list[str]
 
 
-@app.post("/ask", response_model=aiResponse)
-async def ask_rag(request: userRequest):
-    return query_docs(request.prompt)
-
-
-if __name__ == "__main__":
-    import uvicorn
-
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+@app.post("/ask", response_model=AIResponse)
+async def ask_rag(request: UserRequest):
+    try:
+        return await query_docs(request.prompt)
+    except Exception as e:
+        logger.exception("query failed")
+        raise HTTPException(status_code=500, detail="internal query error") from e
