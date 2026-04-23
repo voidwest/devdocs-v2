@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     data_dir: Path = base_dir / "/app/data/docs"
     db_dir: Path = base_dir / "vector_db"
     llm_model: str = "phi3:mini"
-    llm_base_url: str = "http://localhost:11434"
+    llm_base_url: str = "http://ollama:11434"
     temperature: float = 0.1
     top_k: int = 5
     request_timeout: int = 300

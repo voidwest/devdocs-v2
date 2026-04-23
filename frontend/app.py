@@ -28,7 +28,9 @@ query = st.text_input(
 if st.button("ask", type="primary") and query:
     with st.spinner("getting context and answer"):
         try:
-            resp = requests.post(f"{API_URL}/ask", json={"prompt": query}, timeout=60.0)
+            resp = requests.post(
+                f"{API_URL}/ask", json={"prompt": query}, timeout=300.0
+            )
             resp.raise_for_status()
             data = resp.json()
         except requests.Timeout:
@@ -44,5 +46,3 @@ if st.button("ask", type="primary") and query:
         with st.expander("sources", expanded=True):
             for src in data["sources"]:
                 st.caption(f"'{src}`")
-elif query and not st.button:
-    st.info("click 'ask' to submit the question")
