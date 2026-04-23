@@ -1,11 +1,11 @@
-import os
+import logging
 from contextlib import asynccontextmanager
 
-import config
-from fastapi import FastAPI
+from config import get_settings
+from fastapi import FastAPI, HTTPException
 from ingest import run_ingest
-from pydantic import BaseModel
-from query import query_docs
+from pydantic import BaseModel, Field
+from query import close_httpx_client, query_docs
 
 
 @asynccontextmanager
