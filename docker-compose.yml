@@ -33,7 +33,7 @@ services:
         ollama pull phi3:mini
         wait $$SERVER_PID
       '
-    restart: unless-stopped
+    restart: unless_stopped
 
 volumes:
   ollama_data:
