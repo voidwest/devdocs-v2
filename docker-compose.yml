@@ -37,5 +37,15 @@ services:
       '
     restart: unless-stopped
 
+  frontend:
+    build: ./frontend
+    ports:
+      - "8501:8501"
+    environment:
+      - API_URL=http://rag-app:8000
+    depends_on:
+      - rag-app
+    restart: unless-stopped
+
 volumes:
   ollama_data:
