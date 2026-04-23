@@ -19,3 +19,21 @@ with st.sidebar:
 
     st.header("settings")
     show_sources = st.checkbox("show source ref", value=True)
+
+
+query = st.text_input(
+    "ask a question", placeholder="probably something about your documents"
+)
+
+if st.button("ask", type="primary") and query:
+    with st.spinner("getting context and answer"):
+        try:
+            resp = requests.post(f"{API_URL}/ask", json={"prompt": query}, timeout=60.0)
+            resp.raise_for_status()
+            data = resp.json()
+        except requests.Timeout:
+            st.error("request timed out")
+            st.stop()
+        except requests.RequestException as e:
+            st.error(f"api error: {e}")
+            st.stop()
