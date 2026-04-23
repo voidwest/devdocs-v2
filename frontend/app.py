@@ -37,3 +37,12 @@ if st.button("ask", type="primary") and query:
         except requests.RequestException as e:
             st.error(f"api error: {e}")
             st.stop()
+    st.markdown("### answer")
+    st.markdown(data["answer"])
+
+    if show_sources and data.get("sources"):
+        with st.expander("sources", expanded=True):
+            for src in data["sources"]:
+                st.caption(f"'{src}`")
+elif query and not st.button:
+    st.info("click 'ask' to submit the question")
