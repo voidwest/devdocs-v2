@@ -6,16 +6,19 @@ RUN apt-get update && apt-get install -y \
 build-essential \
 && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN groupadd -r appgroup && useradd -r -g appgroup appuser
 
-COPY . .
+COPY --from=builder /root/.local /home/appuser/.local
+ENV PATH=/home/appuser/.local/bin:$PATH
+
+COPY ./app ./app
+
+RUN chown -R appuser:appgroup /app
+
+USER appuser
 
 WORKDIR /app/app
-
 ENV PYTHONPATH=/app/app
-
-RUN mkdir -p data/docs vector_db
 
 EXPOSE 8000
 
