@@ -8,4 +8,4 @@ COPY app.py .
 
 EXPOSE 8501
 
-CMD ["streamit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
