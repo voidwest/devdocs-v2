@@ -9,7 +9,9 @@ services:
     environment:
       - LLM_BASE_URL_KEY=http://ollama:11434
     depends_on:
-      - ollama
+      ollama:
+        condition: service_healthy
+        restart: unless_stopped
 
   ollama:
     image: ollama/ollama:latest
@@ -17,11 +19,21 @@ services:
       - "11434:11434"
     volumes:
       - ollama_data:/root/.ollama
-    command: >
-      sh -c "ollama serve &
-             sleep 5 &&
-             ollama pull phi3:mini &&
-             wait"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    entrypoint: >
+      sh -c '
+        ollama serve &
+        SERVER_PID=$$!
+        sleep 2
+        ollama pull phi3:mini
+        wait $$SERVER_PID
+      '
+    restart: unless-stopped
 
 volumes:
   ollama_data:
