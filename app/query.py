@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from typing import Any
 
@@ -8,6 +9,21 @@ from embedding import get_embedding_function
 
 logger = logging.getLogger(__name__)
 _httpx_client: httpx.AsyncClient | None = None
+_client = None
+_client_lock = asyncio.Lock()
+
+
+async def get_chroma_client():
+    global _client
+    if _client is not None:
+        return _client
+
+    async with _client_lock:
+        if _client is not None:
+            return _client
+        settings = get_settings()
+        _client = chromadb.PersistentClient(path=settings.vector_db_path)
+        return _client
 
 
 def get_httpx_client() -> httpx.AsyncClient:
@@ -45,7 +61,7 @@ def trim_context(docs: list[str], max_chars: int) -> list[str]:
 async def get_context(query: str, n_result: int | None = None) -> tuple[str, list[str]]:
 
     settings = get_settings()
-    client = chromadb.PersistentClient(path=settings.vector_db_path)
+    client = await get_chroma_client()
     emb_fn = get_embedding_function()
     collection = client.get_or_create_collection(
         name="devdocs", embedding_function=emb_fn
