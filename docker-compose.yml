@@ -1,37 +1,39 @@
 services:
   rag-app:
+    user: "${UID}:${GID}"
     build: .
-    ports:
-      - "8000:8000"
+    network_mode: host # Add this
+    # ports:            # You can comment this out; host mode ignores it
+    #   - "8000:8000"
     volumes:
       - ./app/data/docs:/app/app/data/docs
       - ./app/vector_db/chroma_store:/app/app/vector_db/chroma_store
     environment:
-      - LLM_BASE_URL_KEY=http://ollama:11434
+      - LLM_BASE_URL_KEY=http://localhost:11434
+      - PYTHONPATH=/home/appuser/.local/lib/python3.11/site-packages
+      - PATH=$PATH:/home/appuser/.local/bin
+      - PYTHONUNBUFFERED=1y
     depends_on:
-      ollama:
-        condition: service_healthy
-    restart: unless-stopped
+      - ollama
 
   ollama:
+    network_mode: host
     image: ollama/ollama:latest
-    ports:
-      - "11434:11434"
     volumes:
       - ollama_data:/root/.ollama
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      test: ["CMD", "curl", "-f", "http://localhost:11434"]
       interval: 5s
       timeout: 3s
       retries: 10
-      start_period: 10s
+      start_period: 900s
     entrypoint: >
       sh -c '
         ollama serve &
-        SERVER_PID=$$!
+        SERVER_PID=$!
         sleep 2
         ollama pull phi3:mini
-        wait $$SERVER_PID
+        wait $SERVER_PID
       '
     restart: unless-stopped
 
