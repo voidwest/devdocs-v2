@@ -1,10 +1,13 @@
 import asyncio
 import logging
+import os
 from contextlib import asynccontextmanager
 
 import chromadb.errors
 from config import get_settings
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import RedirectResponse
+from fastapi.staticfiles import StaticFiles
 from ingest import run_ingest
 from pydantic import BaseModel, Field
 from query import close_httpx_client, get_chroma_client, query_docs
@@ -18,6 +21,7 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     settings = get_settings()
+    os.makedirs(settings.vector_db_path, exist_ok=True)
     logger.info("starting service, vector db path is at %s", settings.vector_db_path)
 
     try:
@@ -47,6 +51,18 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan, title="DevDocs V2")
+
+app.mount("/static", StaticFiles(directory="static", html=True), name="static")
+
+
+@app.get("/")
+async def root():
+    return RedirectResponse(url="/static/index.html")
+
+
+@app.get("/health")
+async def health_check():
+    return {"status": "ok"}
 
 
 class UserRequest(BaseModel):

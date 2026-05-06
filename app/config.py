@@ -5,8 +5,10 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
+    model_config = {"env_prefix": "", "case_sensitive": False}
+
     base_dir: Path = Path(__file__).resolve().parent
-    data_dir: Path = base_dir / "/app/data/docs"
+    data_dir: Path = Path("/app/data/docs")
     db_dir: Path = base_dir / "vector_db"
     llm_model: str = "phi3:mini"
     llm_base_url: str = "http://ollama:11434"
@@ -21,10 +23,6 @@ class Settings(BaseSettings):
     chunk_size: int = 512
     chunk_overlap: int = 64
     max_prompt_chars: int = 12000
-
-    class Config:
-        env_prefix = ""
-        case_sensitive = False
 
 
 @lru_cache

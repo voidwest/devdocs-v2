@@ -51,7 +51,7 @@ def trim_context(docs: list[str], max_chars: int) -> list[str]:
                 trimmed.append(d[:remaining])
                 total += remaining
                 logger.info("context trimmed at %d chars (limit %d)", total, max_chars)
-                break
+            break
         trimmed.append(d)
         total += len(d)
 
@@ -65,7 +65,7 @@ async def get_context(query: str, n_result: int | None = None) -> tuple[str, lis
     emb_fn = get_embedding_function()
     try:
         collection = client.get_collection(name="devdocs")
-    except:
+    except Exception:
         collection = client.get_or_create_collection(
             name="devdocs",
             embedding_function=emb_fn,  # type: ignore
@@ -156,4 +156,4 @@ async def query_docs(user_query: str) -> dict[str, Any]:
 if __name__ == "__main__":
     test_query = "what's this doc about?"
     print(f"User: {test_query}")
-    print(f"AI: {query_docs(test_query)}")
+    print(f"AI: {asyncio.run(query_docs(test_query))}")

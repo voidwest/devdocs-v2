@@ -12,6 +12,7 @@ RUN mkdir -p /home/appuser/.cache && chown -R appuser:appgroup /home/appuser
 COPY --from=builder /root/.local /home/appuser/.local
 ENV PATH=/home/appuser/.local/bin:$PATH
 COPY ./app ./app
+RUN mkdir -p /app/app/vector_db/chroma_store
 RUN chown -R appuser:appgroup /app
 USER appuser
 WORKDIR /app/app

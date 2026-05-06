@@ -77,13 +77,11 @@ def run_ingest():
     emb_fn = get_embedding_function()
 
     try:
-        # First, try to just get the collection without specifying the function
         collection = client.get_collection(name="devdocs")
-        print("Found existing collection, using persisted embedding function.")
-    except:
-        # If it doesn't exist, create it with your preferred function
+        logger.info("Found existing collection, using persisted embedding function.")
+    except Exception:
         collection = client.create_collection(name="devdocs", embedding_function=emb_fn)  # type: ignore
-        print("Created new collection with sentence_transformer.")
+        logger.info("Created new collection with sentence_transformer.")
 
     pdf_files = {
         f: os.path.join(settings.data_dir, f)
@@ -114,26 +112,30 @@ def run_ingest():
         if not pages:
             continue
 
-        page_texts = [p["text"] for p in pages]
-        chunks = list(
-            chunk_text_stream(page_texts, settings.chunk_size, settings.chunk_overlap)
-        )
+        all_chunks: list[str] = []
+        all_metadatas: list[dict] = []
 
-        ids = [f"{doc_hash}_{i}" for i in range(len(chunks))]
+        for p in pages:
+            page_num = p["metadata"]["page"]
+            page_chunks = list(
+                chunk_text_stream([p["text"]], settings.chunk_size, settings.chunk_overlap)
+            )
+            for chunk_text in page_chunks:
+                if not chunk_text.strip():
+                    continue
+                all_chunks.append(chunk_text)
+                all_metadatas.append({
+                    "source": filename,
+                    "page": str(page_num),
+                    "dochash": doc_hash,
+                })
 
-        metadatas = [
-            {
-                "source": filename,
-                "page": "multi",
-                "dochash": doc_hash,
-            }
-            for _ in chunks
-        ]
-        logger.info("adding %d chunks for %s", len(chunks), filename)
+        ids = [f"{doc_hash}_{i}" for i in range(len(all_chunks))]
+        logger.info("adding %d chunks for %s", len(all_chunks), filename)
         collection.add(
-            documents=chunks,
+            documents=all_chunks,
             ids=ids,
-            metadatas=metadatas,  # type: ignore[arg-type]
+            metadatas=all_metadatas,  # type: ignore[arg-type]
         )
 
 

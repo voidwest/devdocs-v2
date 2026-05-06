@@ -32,19 +32,11 @@ services:
         ollama serve &
         SERVER_PID=$!
         sleep 2
-        ollama pull phi3:mini
+        if ! ollama list | grep -q phi3:mini; then
+          ollama pull phi3:mini
+        fi
         wait $$SERVER_PID
       '
-    restart: unless-stopped
-
-  frontend:
-    build: ./frontend
-    ports:
-      - "8501:8501"
-    environment:
-      - API_URL=http://rag-app:8000
-    depends_on:
-      - rag-app
     restart: unless-stopped
 
 volumes:
