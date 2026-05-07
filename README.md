@@ -1,5 +1,7 @@
 # devdocs-v2
 
+![CI](https://github.com/west/devdocs-v2/actions/workflows/ci.yml/badge.svg)
+
 local RAG pipeline for querying PDF documents. drop in a PDF, ask questions, get grounded answers with source references. no external APIs, runs entirely on your machine.
 
 ## features
@@ -39,7 +41,7 @@ drop your PDFs into `app/data/docs/`, then:
 docker compose up --build
 ```
 
-the app indexes your docs automatically on first boot. watch the logs for `adding N chunks` to know it's working.
+the app indexes your docs automatically when the vector collection is empty (first boot or after a volume wipe). watch the logs for `adding N chunks` to know it's working.
 
 ### usage
 
@@ -200,11 +202,11 @@ best quality/speed tradeoff for CPU inference. phi-3 mini handles instruction-fo
 
 ### why vanilla HTML/CSS/JS for the frontend?
 
-no build step, no dependency hell. a single static HTML file served by fastapi's `StaticFiles` mount. the entire frontend is under 300 lines — dark theme, chat bubbles, source tags, markdown rendering, and health polling. no npm, no webpack, no python dependency. it loads instantly and works on any browser.
+no build step, no dependency hell. a single static HTML file served by fastapi's `StaticFiles` mount. the entire frontend is under 300 lines — dark theme, chat bubbles, source tags, markdown rendering, and health polling (15s interval with visual connection indicator). no npm, no webpack, no python dependency. it loads instantly and works on any browser.
 
 ### why a unified container (backend + frontend)?
 
-simpicity. the frontend is served by fastapi from within the same container, reducing the compose setup from 3 services to 2. no separate frontend build, no inter-container networking for the UI, and one less port to expose. the only split is rag-app + ollama, which is a genuine separation of concerns (inference hardware may differ).
+simplicity. the frontend is served by fastapi from within the same container, reducing the compose setup from 3 services to 2. no separate frontend build, no inter-container networking for the UI, and one less port to expose. the only split is rag-app + ollama, which is a genuine separation of concerns (inference hardware may differ).
 
 ## known limitations
 
@@ -237,11 +239,14 @@ a CI pipeline runs tests on every push and PR via GitHub Actions.
 │   ├── query.py         # retrieval, prompt building, LLM call
 │   ├── static/          # web UI (vanilla HTML/CSS/JS)
 │   └── data/docs/       # drop PDFs here
-├── tests/               # unit tests
+├── tests/               # unit tests (chunking, config, query)
+├── .dockerignore        # docker build exclusion rules
+├── .github/
+│   └── workflows/
+│       └── ci.yml       # GitHub Actions CI (pytest on push/PR)
 ├── docker-compose.yml   # 2 services: rag-app, ollama
 ├── Dockerfile           # multi-stage python build
-├── requirements.txt     # pinned python dependencies
-└── .github/workflows/   # CI pipeline
+└── requirements.txt     # pinned python dependencies
 ```
 
 ## roadmap
