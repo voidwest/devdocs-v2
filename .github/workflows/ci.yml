@@ -25,4 +25,4 @@ jobs:
           pip install pytest
 
       - name: Run tests
-        run: python -m pytest tests/ -v
+        run: PYTHONPATH=app python -m pytest tests/ -v
